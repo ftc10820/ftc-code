@@ -37,15 +37,33 @@ public class ScorpioTele extends OpMode{
 
     @Override
     public void loop() {
-//        float modPower = gamepad1.left_trigger;
-        frontLeft.setPower(gamepad1.right_trigger);
-        backLeft.setPower(gamepad1.right_trigger);
-        frontRight.setPower(gamepad1.left_trigger);
-        backRight.setPower(gamepad1.left_trigger); // changed
-//        if(gamepad1.y) elevator.setPower(1);
+        float modPower = gamepad1.right_bumper ? -1 : 1;
+//        setPowers(gamepad1.left_trigger);
+        double rt = gamepad1.right_trigger;
+        frontLeft.setPower(gamepad1.right_stick_y);
+        backLeft.setPower(gamepad1.right_stick_y);
+        frontRight.setPower(-gamepad1.right_stick_y);
+        backRight.setPower(-gamepad1.right_stick_y);
+        derR();
+        derL();
+
 //        if(gamepad1.right_trigger >= 0.8f) launchBall();
 //        if(gamepad1.right_bumper) pushBlue.setPosition(pushBlue.getPosition());
 //        if(gamepad1.left_bumper) pushRed.setPosition(pushRed.getPosition());
+    }
+    private void derR(){
+        double isDerR = gamepad1.right_bumper ? gamepad1.right_stick_y : 1;
+        frontLeft.setPower(isDerR);
+        backLeft.setPower(isDerR);
+        frontRight.setPower(isDerR);
+        backRight.setPower(isDerR);
+    }
+    private void derL(){
+        double isDerL = gamepad1.left_bumper ? -gamepad1.right_stick_y : -1;
+        frontLeft.setPower(isDerL);
+        backLeft.setPower(isDerL);
+        frontRight.setPower(isDerL);
+        backRight.setPower(isDerL);
     }
 //    private void launchBall(){
 //        double powerMod = 1f;
