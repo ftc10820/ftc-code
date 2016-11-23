@@ -57,16 +57,16 @@ public class ScorpioTele extends OpMode{
     private void derR(){
         double isDerR = 1;
         frontLeft.setPower(isDerR);
-        backLeft.setPower(isDerR);
-        frontRight.setPower(isDerR);
+        backLeft.setPower(-isDerR);
+        frontRight.setPower(-isDerR);
         backRight.setPower(isDerR);
     }
     private void derL(){
         double isDerL = -1;
-        frontLeft.setPower(isDerL);
+        frontLeft.setPower(-isDerL);
         backLeft.setPower(isDerL);
         frontRight.setPower(isDerL);
-        backRight.setPower(isDerL);
+        backRight.setPower(-isDerL);
     }
 //    private void launchBall(){
 //        double powerMod = 1f;
@@ -76,4 +76,3 @@ public class ScorpioTele extends OpMode{
 
 
 }
-
