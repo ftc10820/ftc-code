@@ -35,13 +35,12 @@ public class ScorpioAuto extends LinearOpMode {
     private DcMotor backRight;
     private DcMotor flywheelLeft;
     private DcMotor flywheelRight;
-    private Servo elevator;
+    private DcMotor sweeper;
     private Servo pushRed;
     private Servo pushBlue;
     private ColorSensor whiteLine;
     private ColorSensor beacon;
-    private ModernRoboticsI2cRangeSensor range;
-    private TouchSensor touch;
+
 
     private final short FORWARDS = 1;
     private final short BACKWARDS = -1;
@@ -56,15 +55,11 @@ public class ScorpioAuto extends LinearOpMode {
         backRight = hardwareMap.dcMotor.get("motor_backRight");
         flywheelRight = hardwareMap.dcMotor.get("motor_flywheelRight");
         flywheelLeft = hardwareMap.dcMotor.get("motor_flywheelLeft");
-        elevator = hardwareMap.servo.get("servo_elevator");
+        sweeper = hardwareMap.dcMotor.get("motor_sweeper");
         pushRed = hardwareMap.servo.get("red_servo");
         pushBlue = hardwareMap.servo.get("blue_servo");
-        whiteLine = hardwareMap.colorSensor.get("white_line");
-        beacon = hardwareMap.colorSensor.get("beacon");
-        touch = hardwareMap.touchSensor.get("touch");
-        range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
-        pushBlue.setPosition(0.0);
-        pushRed.setPosition(0.0);
+        whiteLine = hardwareMap.colorSensor.get("white_color");
+        beacon = hardwareMap.colorSensor.get("beacon_sensor");
 
         float hsvValues[] = {0F,0F,0F};
         final float values[] = hsvValues;
@@ -94,19 +89,18 @@ public class ScorpioAuto extends LinearOpMode {
 
 //       send the info back to driver station using telemetry function.
             telemetry.addData( "LED", bLedOn ? "On" : "Off" );
-            while (range.getDistance( DistanceUnit.INCH) >= 0.5);
+//            while (range.getDistance( DistanceUnit.INCH) >= 0.5);
             if(whiteLine.blue() >= 150 && whiteLine.red() >=150 && whiteLine.green() >= 150){
                 move(0.1);
             }else {
                 turn(-0.5);
             }
             //      telemetry.addData("Clear", colorSensor.alpha());
-            telemetry.addData( "Red  ", beacon.red() );
-            telemetry.addData( "Green", beacon.green() );
-            telemetry.addData( "Blue ", beacon.blue() );
-            telemetry.addData( "Hue", hsvValues[0] );
+//            telemetry.addData( "Red  ", beacon.red() );
+//            telemetry.addData( "Green", beacon.green() );
+//            telemetry.addData( "Blue ", beacon.blue() );
+//            telemetry.addData( "Hue", hsvValues[0] );
             Color.RGBToHSV( whiteLine.red() * 8, whiteLine.green() * 8, whiteLine.blue() * 8, hsvValues );
-
             //send the info back to driver station using telemetry function.
 
 
@@ -132,11 +126,11 @@ public class ScorpioAuto extends LinearOpMode {
     private void run(){
         turn(51.3402);
         move(6.40312);
-        turn(360-51.3402);
+        turn(360 - 51.3402);
 
-        while (!touch.isPressed()){
-            whiteLine();
-        }
+//        while (!touch.isPressed()){
+//            whiteLine();
+//        }
 }
     private void turn(double deg) {
         long time = neededTime(deg);
@@ -165,13 +159,16 @@ public class ScorpioAuto extends LinearOpMode {
     private void whiteLine(){
         if(whiteLine.blue() >= 150 && whiteLine.red() >=150 && whiteLine.green() >= 150){
             move(0.1);
-        }else {
+        } else {
             turn(-0.5);
         }
 
     }
+    private boolean rBeaconTest(){
+        return beacon.red() > 200;
+    }
+
     private void waitTime(long ms) {
         this.sleep(ms);
-
     }
 }
