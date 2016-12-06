@@ -14,45 +14,65 @@ public class ScorpioTele extends OpMode{
     private DcMotor frontRight;
     private DcMotor backLeft;
     private DcMotor backRight;
-//    private DcMotor flywheelLeft;
-//    private DcMotor flywheelRight;
-//    private Servo elevator;
-//    private Servo pushRed;
-//    private Servo pushBlue;
+    private DcMotor flywheelLeft;
+    private DcMotor flywheelRight;
+    private DcMotor sweeper;
+    private Servo pushRed;
+    private Servo pushBlue;
     @Override
     public void init() {
         frontLeft = hardwareMap.dcMotor.get("motor_frontLeft");
         frontRight = hardwareMap.dcMotor.get("motor_frontRight");
         backLeft = hardwareMap.dcMotor.get("motor_backLeft");
         backRight = hardwareMap.dcMotor.get("motor_backRight");
-//        flywheelRight = hardwareMap.dcMotor.get("motor_flywheelRight");
-//        flywheelLeft = hardwareMap.dcMotor.get("motor_flywheelLeft");
-//        elevator = hardwareMap.servo.get("servo_elevator");
-//        pushRed = hardwareMap.servo.get("red_servo");
-//        pushBlue = hardwareMap.servo.get("blue_servo");
-//        pushBlue.setPosition(0.0);
-//        pushRed.setPosition(0.0);
+        flywheelRight = hardwareMap.dcMotor.get("motor_flywheelRight");
+        flywheelLeft = hardwareMap.dcMotor.get("motor_flywheelLeft");
+        sweeper = hardwareMap.dcMotor.get("motor_sweeper");
+        pushRed = hardwareMap.servo.get("red_servo");
+        pushBlue = hardwareMap.servo.get("blue_servo");
 
     }
 
     @Override
     public void loop() {
-        float modPower = gamepad1.right_bumper ? -1 : 1;
-//        setPowers(gamepad1.left_trigger);
-        double rt = gamepad1.right_trigger;
-        frontLeft.setPower(gamepad1.right_stick_y);
-        backLeft.setPower(gamepad1.right_stick_y);
-        frontRight.setPower(-gamepad1.right_stick_y);
-        backRight.setPower(-gamepad1.right_stick_y);
+        double rsy = gamepad1.right_stick_y;
+        double rsx = gamepad1.right_stick_x;
+        double frontL = rsy + rsx;
+        double backL = rsy + rsx;
+        double frontR = -rsy - rsx;
+        double backR = -rsy - rsx;
+
+        double largestVal =  Math.max(Math.max(Math.abs(frontL),Math.abs(backL)), (Math.max(Math.abs(frontR),Math.abs(backR))));
+        if(largestVal > 1){
+            frontL /= largestVal;
+            backL /= largestVal;
+            frontR /= largestVal;
+            backR /= largestVal;
+        }
+
+        sweeper.setPower(gamepad2.left_trigger);
+        if(gamepad1.right_trigger >= 0.1) launchBall();
+        double degServo = 0;
+        double startPos = 0;
+        if(gamepad2.right_bumper){
+            pushBlue.setPosition(startPos + degServo);
+        }
+        if(gamepad2.left_bumper){
+            pushRed.setPosition(startPos - degServo);
+        }
+
+
         if(gamepad1.right_bumper){
             derR();
         }
-        if(gamepad1.left_bumper){
+        else if(gamepad1.left_bumper){
             derL();
+        }else{
+            frontLeft.setPower(frontL);
+            backLeft.setPower(backL);
+            frontRight.setPower(frontR);
+            backRight.setPower(backR);
         }
-//        if(gamepad1.right_trigger >= 0.8f) launchBall();
-//        if(gamepad1.right_bumper) pushBlue.setPosition(pushBlue.getPosition());
-//        if(gamepad1.left_bumper) pushRed.setPosition(pushRed.getPosition());
     }
     private void derR(){
         double isDerR = 1;
@@ -68,11 +88,13 @@ public class ScorpioTele extends OpMode{
         frontRight.setPower(isDerL);
         backRight.setPower(-isDerL);
     }
-//    private void launchBall(){
-//        double powerMod = 1f;
-//        flywheelLeft.setPower(powerMod);
-//        flywheelRight.setPower(powerMod);
-//    }
+    private void launchBall(){
+        double powerMod = gamepad2.right_trigger;
+        if(gamepad2.x) {
+            flywheelLeft.setPower(powerMod);
+            flywheelRight.setPower(powerMod);
+        }
+    }
 
 
 }
