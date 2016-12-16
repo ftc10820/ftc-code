@@ -1,33 +1,22 @@
 package org.firstinspires.ftc.robotcontroller.internal;
 
-import android.app.Activity;
 import android.graphics.Color;
-import android.view.View;
-
-import com.qualcomm.ftcrobotcontroller.R;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.hardware.UltrasonicSensor;
-import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.internal.TelemetryImpl;
+
+import static android.os.SystemClock.sleep;
 
 /**
  * Created by the Falconeers 10820
  */
 public class ScorpioAuto extends LinearOpMode {
-    private final double diameterOfWheel = 16.25;
+    private final double diameterOfWheel = 8;
     private final double circOfWheel = diameterOfWheel * Math.PI;
-    private final double disBetweenWheels = 42;
-
+    private final double disBetweenWheels = 15.85;
 
     private DcMotor frontLeft;
     private DcMotor frontRight;
@@ -40,6 +29,7 @@ public class ScorpioAuto extends LinearOpMode {
     private Servo pushBlue;
     private ColorSensor whiteLine;
     private ColorSensor beacon;
+    private TouchSensor touchSensor;
 
 
     private final short FORWARDS = 1;
@@ -60,6 +50,7 @@ public class ScorpioAuto extends LinearOpMode {
         pushBlue = hardwareMap.servo.get("blue_servo");
         whiteLine = hardwareMap.colorSensor.get("white_color");
         beacon = hardwareMap.colorSensor.get("beacon_sensor");
+        touchSensor = hardwareMap.touchSensor.get("touch");
 
         float hsvValues[] = {0F,0F,0F};
         final float values[] = hsvValues;
@@ -134,8 +125,8 @@ public class ScorpioAuto extends LinearOpMode {
 }
     private void turn(double deg) {
         long time = neededTime(deg);
-        if (deg > 0) allWheels((short)-1);
-        else allWheels((short)1);
+        if (deg > 0) allWheels((short) -1);
+        else allWheels((short) 1);
         try {
             wait(time);
         } catch (Exception ignored) {
@@ -164,11 +155,36 @@ public class ScorpioAuto extends LinearOpMode {
         }
 
     }
+    private void derR(){
+        double isDerR = 1;
+        frontLeft.setPower(isDerR);
+        backLeft.setPower(-isDerR);
+        frontRight.setPower(-isDerR);
+        backRight.setPower(isDerR);
+    }
+    private void derL(){
+        double isDerL = -1;
+        frontLeft.setPower(-isDerL);
+        backLeft.setPower(isDerL);
+        frontRight.setPower(isDerL);
+        backRight.setPower(-isDerL);
+    }
+    private void launchBall(double powerMod){
+        flywheelLeft.setPower(powerMod);
+        flywheelRight.setPower(powerMod);
+
+    }
     private boolean rBeaconTest(){
         return beacon.red() > 200;
     }
 
     private void waitTime(long ms) {
         this.sleep(ms);
+    }
+    private void sweep() {
+        while(!touchSensor.isPressed()) sweeper.setPower(gamepad2.left_trigger);
+        sweeper.setPower(-gamepad2.left_trigger);
+        sleep(2000);
+        sweeper.setPower(0);
     }
 }
