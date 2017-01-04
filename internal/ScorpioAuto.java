@@ -1,22 +1,16 @@
 package org.firstinspires.ftc.robotcontroller.internal;
 
-import android.graphics.Color;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-
-
-import static android.os.SystemClock.sleep;
 
 /**
  * Created by the Falconeers 10820
  */
-public class ScorpioAuto extends LinearOpMode {
-    private final double diameterOfWheel = 8;
-    private final double circOfWheel = diameterOfWheel * Math.PI;
-    private final double disBetweenWheels = 15.85;
+
+public class ScorpioTele extends OpMode {
 
     private DcMotor frontLeft;
     private DcMotor frontRight;
@@ -25,166 +19,173 @@ public class ScorpioAuto extends LinearOpMode {
     private DcMotor flywheelLeft;
     private DcMotor flywheelRight;
     private DcMotor sweeper;
-    private Servo pushRed;
-    private Servo pushBlue;
-    private ColorSensor whiteLine;
-    private ColorSensor beacon;
+    private Servo pushR;
+    private Servo pushL;
     private TouchSensor touchSensor;
-
-
-    private final short FORWARDS = 1;
-    private final short BACKWARDS = -1;
-    private final short BRAKE = 0;
+    double startPos = 0;
+    //private GyroSensor gyroSensor;
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        this.waitForStart();
+    public void init() {
         frontLeft = hardwareMap.dcMotor.get("motor_frontLeft");
         frontRight = hardwareMap.dcMotor.get("motor_frontRight");
         backLeft = hardwareMap.dcMotor.get("motor_backLeft");
         backRight = hardwareMap.dcMotor.get("motor_backRight");
         flywheelRight = hardwareMap.dcMotor.get("motor_flywheelRight");
         flywheelLeft = hardwareMap.dcMotor.get("motor_flywheelLeft");
-        sweeper = hardwareMap.dcMotor.get("motor_sweeper");
-        pushRed = hardwareMap.servo.get("red_servo");
-        pushBlue = hardwareMap.servo.get("blue_servo");
-        whiteLine = hardwareMap.colorSensor.get("white_color");
-        beacon = hardwareMap.colorSensor.get("beacon_sensor");
-        touchSensor = hardwareMap.touchSensor.get("touch");
+        sweeper = hardwareMap.dcMotor.get("sweeper");
+        pushL = hardwareMap.servo.get("LeftBeaconPusher");
+        pushR = hardwareMap.servo.get("RightBeaconPusher");
+        touchSensor = hardwareMap.touchSensor.get("SweeperLimitSwitch");
+        //gyroSensor = hardwareMap.gyroSensor.get("");
 
-        float hsvValues[] = {0F,0F,0F};
-        final float values[] = hsvValues;
-        boolean bPrevState = false;
-        boolean bCurrState = false;
-        boolean bLedOn = false;
-        beacon.enableLed(bLedOn);
-        whiteLine.enableLed( true );
-        while (opModeIsActive()) {
+        pushR.setDirection(Servo.Direction.REVERSE);
+        pushL.setDirection(Servo.Direction.FORWARD);
 
-            // check the status of the x button on either gamepad.
-            bCurrState = gamepad1.x;
+        pushR.scaleRange(0.5, 0.75);
+        pushL.scaleRange(0.5, 0.75);
 
-            // check for button state transitions.
-            if ((bCurrState) && (!bPrevState)) {
+        pushL.setPosition(0);
+        pushR.setPosition(0);
 
-                // button is transitioning to a pressed state. So Toggle LED
-                bLedOn = !bLedOn;
-                beacon.enableLed( bLedOn );
+    }
+
+    @Override
+    public void loop() {
+        double frontL = 0;
+        double backL = 0;
+        double frontR = 0;
+        double backR = 0;
+        double theta;
+        double velocity = 1;
+        double v0 = 0;
+        double pi = 3.1459265359;
+        double piDiv4 = pi / 4;
+        boolean isRBPressed = gamepad1.right_bumper;
+
+        telemetry.addData("pushL pos", pushL.getPosition());
+        telemetry.addData("pushR pos", pushR.getPosition());
+
+
+        // Forward - -2.3572....
+        // Backward - 0.7843....
+        // Left - 2.35....
+        // Right - -0.786....
+
+
+//        telemetry.addData("x", gamepad1.right_stick_x);
+//        telemetry.addData("y", gamepad1.right_stick_y);
+        if (isRBPressed) {
+            if (Math.abs(gamepad1.right_stick_x) >= .1 || Math.abs(gamepad1.right_stick_y) >= .1) {
+                theta = Math.atan2(-gamepad1.right_stick_y, gamepad1.right_stick_x);
+                while(theta < 0) theta += Math.PI * 2;
+                telemetry.addData("theta", theta);
+                frontL = -velocity * Math.sin(theta + piDiv4) + v0;
+                backL = velocity * Math.cos(theta + piDiv4) + v0;
+                frontR = -velocity * Math.cos(theta + piDiv4) + v0;
+                backR = velocity * Math.sin(theta + piDiv4) + v0;
             }
-
-            // update previous state variable.
-            bPrevState = bCurrState;
-
-            // convert the RGB values to HSV values.
-            Color.RGBToHSV( beacon.red() * 8, beacon.green() * 8, beacon.blue() * 8, hsvValues );
-
-//       send the info back to driver station using telemetry function.
-            telemetry.addData( "LED", bLedOn ? "On" : "Off" );
-//            while (range.getDistance( DistanceUnit.INCH) >= 0.5);
-            if(whiteLine.blue() >= 150 && whiteLine.red() >=150 && whiteLine.green() >= 150){
-                move(0.1);
-            }else {
-                turn(-0.5);
-            }
-            //      telemetry.addData("Clear", colorSensor.alpha());
-//            telemetry.addData( "Red  ", beacon.red() );
-//            telemetry.addData( "Green", beacon.green() );
-//            telemetry.addData( "Blue ", beacon.blue() );
-//            telemetry.addData( "Hue", hsvValues[0] );
-            Color.RGBToHSV( whiteLine.red() * 8, whiteLine.green() * 8, whiteLine.blue() * 8, hsvValues );
-            //send the info back to driver station using telemetry function.
-
-
-
-            // change the background color to match the color detected by the RGB sensor.
-            // pass a reference to the hue, saturation, and value array as an argument
-            // to the HSVToColor method.
-
-            telemetry.update();
-            idle(); // Always call i
-        }}
-    private void move(double d) {
-        long time = (long) Math.abs(d / (circOfWheel));
-        if (d > 0) drive(FORWARDS);
-        else drive(BACKWARDS);
-        waitTime(time);
-        drive(BRAKE);
-    }
-
-    private long neededTime(double deg) {
-        return (long) (1000 * (((disBetweenWheels / 2) * Math.abs((3 / 4) * deg * Math.PI / 180)) / circOfWheel));
-    }
-    private void run(){
-        turn(51.3402);
-        move(6.40312);
-        turn(360 - 51.3402);
-
-//        while (!touch.isPressed()){
-//            whiteLine();
-//        }
-}
-    private void turn(double deg) {
-        long time = neededTime(deg);
-        if (deg > 0) allWheels((short) -1);
-        else allWheels((short) 1);
-        try {
-            wait(time);
-        } catch (Exception ignored) {
-        }
-        drive(BRAKE);
-    }
-
-    private void allWheels(short s) {
-        frontLeft.setPower(s);
-        backLeft.setPower(s);
-        frontRight.setPower(s);
-        backRight.setPower(s);
-    }
-
-    private void drive(short s) {
-        frontLeft.setPower(-s);
-        backLeft.setPower(-s);
-        frontRight.setPower(s);
-        backRight.setPower(s);
-    }
-    private void whiteLine(){
-        if(whiteLine.blue() >= 150 && whiteLine.red() >=150 && whiteLine.green() >= 150){
-            move(0.1);
         } else {
-            turn(-0.5);
+            frontL = gamepad1.right_stick_y;
+            backL = gamepad1.right_stick_y;
+            frontR = -gamepad1.left_stick_y;
+            backR = -gamepad1.left_stick_y;
+        }
+        sweep();
+        double largestVal = Math.max(Math.max(Math.abs(frontL), Math.abs(backL)), (Math.max(Math.abs(frontR), Math.abs(backR))));
+        if (largestVal > 1) {
+            frontL /= largestVal;
+            backL /= largestVal;
+            frontR /= largestVal;
+            backR /= largestVal;
         }
 
-    }
-    private void derR(){
-        double isDerR = 1;
-        frontLeft.setPower(isDerR);
-        backLeft.setPower(-isDerR);
-        frontRight.setPower(-isDerR);
-        backRight.setPower(isDerR);
-    }
-    private void derL(){
-        double isDerL = -1;
-        frontLeft.setPower(-isDerL);
-        backLeft.setPower(isDerL);
-        frontRight.setPower(isDerL);
-        backRight.setPower(-isDerL);
-    }
-    private void launchBall(double powerMod){
-        flywheelLeft.setPower(powerMod);
-        flywheelRight.setPower(powerMod);
+        if (gamepad2.right_trigger >= 0.1) launchBall();
+        double degServo = gamepad2.left_stick_x;
+        telemetry.addData("degServo ", degServo);
+
+
+        if (gamepad2.right_bumper) {
+            pushL.setPosition(1);
+            waitTime(1000);
+            pushL.setPosition(0);
+        }
+        if (gamepad2.left_bumper) {
+            pushL.setPosition(1);
+            waitTime(1000);
+            pushL.setPosition(0);
+        }
+
+
+//            if (gamepad1.left_bumper) der();
+//            //else stopMoving();
+
+        frontLeft.setPower(frontL);
+        backLeft.setPower(backL);
+        frontRight.setPower(frontR);
+        backRight.setPower(backR);
 
     }
-    private boolean rBeaconTest(){
-        return beacon.red() > 200;
+
+
+//    private void der(){
+//        double velocity = 1;
+//        //double pi = 3.1459265359;
+//        double piDiv4 = Math.PI / 4;
+//        double theta = -Math.PI / 2 + Math.atan2(gamepad1.right_stick_y,gamepad1.right_stick_x);
+//        double frontL = 0;
+//        double backL = 0;
+//        double frontR = 0;
+//        double backR = 0;
+//        if(gamepad1.right_bumper) {
+//            frontL = velocity * Math.sin(theta + piDiv4);
+//            backL = velocity * Math.cos(theta + piDiv4);
+//            frontR = velocity * Math.cos(theta + piDiv4);
+//            backR =  velocity * Math.sin(theta + piDiv4);
+//        }
+//        double largestVal =  Math.max(Math.max(Math.abs(frontL),Math.abs(backL)), (Math.max(Math.abs(frontR),Math.abs(backR))));
+//        if(largestVal > 1){
+//            frontL /= largestVal;
+//            backL /= largestVal;
+//            frontR /= largestVal;
+//            backR /= largestVal;
+//        }
+//    }
+
+    private void launchBall() {
+        double powerMod = gamepad2.right_trigger;
+        if (gamepad2.x) {
+            flywheelLeft.setPower(-powerMod);
+            flywheelRight.setPower(powerMod);
+        }
     }
 
-    private void waitTime(long ms) {
-        this.sleep(ms);
-    }
     private void sweep() {
-        while(!touchSensor.isPressed()) sweeper.setPower(gamepad2.left_trigger);
         sweeper.setPower(-gamepad2.left_trigger);
-        sleep(2000);
-        sweeper.setPower(0);
+        if (gamepad2.a) {
+            sweeper.setPower(gamepad2.left_trigger);
+            telemetry.addData("sweeper: ", sweeper.getCurrentPosition());
+        }
+//        try {
+//            sleep(1500);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        sweeper.setPower(0);
     }
+
+    private void stopMoving() {
+        frontLeft.setPower(0);
+        backLeft.setPower(0);
+        frontRight.setPower(0);
+        backRight.setPower(0);
+    }
+    private void waitTime(long time){
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
