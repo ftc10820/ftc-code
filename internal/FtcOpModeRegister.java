@@ -68,11 +68,12 @@ public class FtcOpModeRegister implements OpModeRegister {
          * Register OpModes implemented in the Blocks visual programming language.
          */
 //        manager.register("name",class);
-        manager.register("Auto",ScorpioAuto.class);
-        manager.register("Tele",ScorpioTele.class);
+        manager.register("Red Auto", RedAuto.class);
+        manager.register("Tele", ScorpioTele.class);
         manager.register("TestLin", TestCodeLin.class);
         manager.register("TestCode", TestCode.class);
         manager.register("SensorCode", SensorCode.class);
+        manager.register("Blue Auto", BlueAuto.class);
         BlocksOpMode.registerAll(manager);
 
         /**
